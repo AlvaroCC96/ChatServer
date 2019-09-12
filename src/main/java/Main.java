@@ -1,3 +1,5 @@
+import cl.ucn.disc.dsm.chat.ChatServer;
+
 import java.io.IOException;
 
 public class Main {
@@ -12,6 +14,4 @@ public class Main {
         ChatServer Server = new ChatServer(PORT); //initialize the server and put it to run
         Server.start();
     }
-
-
 }

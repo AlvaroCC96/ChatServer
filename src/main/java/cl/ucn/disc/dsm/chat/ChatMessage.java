@@ -1,3 +1,4 @@
+package cl.ucn.disc.dsm.chat;
 import java.time.LocalDateTime;
 
 public class ChatMessage {
@@ -19,3 +20,4 @@ public class ChatMessage {
         message=contentMessage;
     }
 }
+
