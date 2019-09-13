@@ -3,8 +3,7 @@ package cl.ucn.disc.dsm.chat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -66,11 +65,69 @@ public class ChatServer {
         pw.println("Date: " + new Date());
         pw.println("Content-Type: text/html; charset=UTF-8");
         pw.println();
+
+        if (request.contains("POST")) {
+            //If the type is POST, we must obtain the request body and store it in the database
+            //and then show the updated chat
+            if (validateAddMessage(lines)) {
+                //.println(chatPage());
+                pw.println();
+                //pw.flush();
+            } else {
+                pw.println("HTTP/1.1 400 ERROR"); //bad request
+                pw.println("Server: DSM v0.0.1");
+                pw.println();
+                // pw.flush();
+            }
+        }
     }
 
-    private List<String> contentFromSocket(Socket socket) {
+    private boolean validateAddMessage(List<String> lines) {
+        return true;
+    }
 
-        return null;
+    private List<String> contentFromSocket(Socket socket) throws IOException {
+        List<String> lines = new ArrayList<String>();
+        String line = "";
+        InputStream inputStream = socket.getInputStream();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+        while (true) {
+            line = bufferedReader.readLine();
+            boolean stateBuffer = true;
+            stateBuffer = bufferedReader.ready(); //buffer is ready when the line is not null
+
+            if (stateBuffer && line.isEmpty()) { //if line is a linebreak of request for part body
+                int largeBody = 0;
+                for(int i =0;i<lines.size();i++){
+                    String chatLine = lines.get(i);
+                    if (chatLine.contains("Content-Length:")) {
+                        largeBody = Integer.parseInt(chatLine.substring(16));
+                    } //get size of content in body
+                }
+                char[] bodyContent = new char[largeBody];
+                StringBuilder stringBuilder = new StringBuilder(largeBody);
+                for (int i = 0; i < largeBody; i++) {
+                    bodyContent[i] = (char)bufferedReader.read();
+                }
+                lines.add(new String(bodyContent)); //formated body content
+                break;
+
+            } else if (!stateBuffer && (line == null || line.isEmpty()) ) {
+                log.debug(line); //EOF
+                //this conditional is for line void or last line from buffer
+                break;
+
+            } else { //simple line not null of request , only add to lines
+                log.debug(line);
+                lines.add(line);
+            }
+        }
+        if (lines.isEmpty()) { //if the list whit content is void , it is only error
+            lines.add("ERROR");
+        }
+        return lines;
+
     }
 
 
