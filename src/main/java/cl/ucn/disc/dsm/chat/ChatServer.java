@@ -82,8 +82,27 @@ public class ChatServer {
         }
     }
 
-    private boolean validateAddMessage(List<String> lines) {
-        return true;
+    private boolean validateAddMessage(List<String> body) {
+
+        if (body.isEmpty()) {
+            return false;
+        }
+        else{
+            String argument = body.get(body.size() - 1);//get post-request elements , user and message
+            argument = argument.replace("username=", "").replace("message=","");
+            String user = argument.substring(0, argument.indexOf('&'));
+            String sentMessage = argument.substring(argument.indexOf('&') + 1, argument.length());
+            sentMessage = sentMessage.replace('+', ' ');
+
+            if (user.isEmpty()|| sentMessage.isEmpty()) {
+                return false; //message or user is void
+            }
+            else {
+                messages.add(new ChatMessage(user, sentMessage)); // add message to database
+                log.debug("Message Added Successfully");
+                return true;
+            }
+        }
     }
 
     private List<String> contentFromSocket(Socket socket) throws IOException {
@@ -127,8 +146,6 @@ public class ChatServer {
             lines.add("ERROR");
         }
         return lines;
-
     }
-
 
 }
