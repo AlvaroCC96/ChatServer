@@ -53,6 +53,39 @@ public class ChatServer {
             }
         }
     }
+    public static String chatPage() throws IOException {
+        String codePage="";
+        String body ="";
+        String header =
+                "<html lang=\"en\">" +
+                        "<head>" +
+                        "<meta charset=\"UTF-8\">" +
+                        "<title>Messenger DSM</title>" +
+                        "</head>" +
+                        "<body>" +
+                        "<h1> Chat DSM-UCN</h1>"+
+                        "<div>";
+        for (int i = 0; i < getList().size();i++ ) {
+            ChatMessage chat = getList().get(i); // this loop add the messages to chat for view in navegator
+            body = body + "<p>" + chat.toString() + "</p>";
+        }
+        body = body +
+                "    </div>\n" + // 2 inputs for POST request user + message
+                "        <form action=\"/\" method=\"post\" >\n" +
+                "            <input type=\"text\" name=\"username\">\n" +
+                "            <input type=\"text\" name=\"message\">\n" +
+                "            <input type=\"submit\" value=\"Enviar\">\n" +
+                "        </form>\n" +
+                "    </div>\n" +
+                "</body>\n" +
+                "</html>";
+        codePage = header + body;
+        return codePage;
+    }
+
+    private static List<ChatMessage> getList() {
+        return messages;
+    }
 
     private void processConnection(Socket socket)  throws IOException{
         // Reading the inputstream
@@ -149,3 +182,4 @@ public class ChatServer {
     }
 
 }
+
