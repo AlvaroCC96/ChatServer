@@ -53,9 +53,9 @@ public class ChatServer {
             }
         }
     }
-    public static String chatPage() throws IOException {
+    private static String chatPage() throws IOException {
         String codePage="";
-        String body ="";
+        StringBuilder body = new StringBuilder();
         String header =
                 "<html lang=\"en\">" +
                         "<head>" +
@@ -65,32 +65,26 @@ public class ChatServer {
                         "<body>" +
                         "<h1> Chat DSM-UCN</h1>"+
                         "<div>";
-        for (int i = 0; i < getList().size();i++ ) {
-            ChatMessage chat = getList().get(i); // this loop add the messages to chat for view in navegator
-            body = body + "<p>" + chat.toString() + "</p>";
+        // this loop add the messages to chat for view in navegator
+        for (ChatMessage chat : messages) {
+            body.append("<p>").append(chat.toString()).append("</p>");
         }
-        body = body +
-                "    </div>\n" + // 2 inputs for POST request user + message
-                "        <form action=\"/\" method=\"post\" >\n" +
-                "            <input type=\"text\" name=\"username\">\n" +
-                "            <input type=\"text\" name=\"message\">\n" +
-                "            <input type=\"submit\" value=\"Enviar\">\n" +
-                "        </form>\n" +
-                "    </div>\n" +
-                "</body>\n" +
-                "</html>";
-        codePage = header + body;
-        return codePage;
-    }
+        body.append("    </div>\n").append( // 2 inputs for POST request user + message
+                "        <form action=\"/\" method=\"post\" >\n").append("       " +
+                "     <input type=\"text\" name=\"username\">\n").append("         " +
+                "   <input type=\"text\" name=\"message\">\n").append("         " +
+                "   <input type=\"submit\" value=\"Enviar\">\n").append("     " +
+                "   </form>\n").append("   " +
+                " </div>\n").append("</body>\n").append("</html>");
 
-    private static List<ChatMessage> getList() {
-        return messages;
+        codePage = header + body.toString();
+        return codePage;
     }
 
     private void processConnection(Socket socket)  throws IOException{
         // Reading the inputstream
-        final List<String> lines = contentFromSocket(socket);
-        final String request = lines.get(0);
+        final List<String> contentSocket = socketRequestContent(socket);
+        final String request = contentSocket.get(0);
         log.debug("Request: {}", request);
         final PrintWriter pw = new PrintWriter(socket.getOutputStream());
         pw.println("HTTP/1.1 200 OK");
@@ -102,17 +96,32 @@ public class ChatServer {
         if (request.contains("POST")) {
             //If the type is POST, we must obtain the request body and store it in the database
             //and then show the updated chat
-            if (validateAddMessage(lines)) {
-                //.println(chatPage());
+            if (validateAddMessage(contentSocket)) {
+                pw.println(chatPage());
                 pw.println();
-                //pw.flush();
+                pw.flush();
             } else {
                 pw.println("HTTP/1.1 400 ERROR"); //bad request
                 pw.println("Server: DSM v0.0.1");
                 pw.println();
-                // pw.flush();
+                pw.flush();
             }
         }
+        else if (request.contains("GET")){
+            //if the type is GET, we only show the chat with the message/s
+            pw.println(chatPage());
+            pw.println();
+            pw.flush();
+        } else {
+            log.debug("ERROR REQUEST");
+            pw.println("HTTP/1.1 400 ERROR");
+            pw.println("Server: DSM v0.0.1");
+            pw.println();
+            pw.flush();
+        }
+        pw.flush();
+        socket.close();
+        log.debug("Connection Process Finished.");
     }
 
     private boolean validateAddMessage(List<String> body) {
@@ -138,48 +147,40 @@ public class ChatServer {
         }
     }
 
-    private List<String> contentFromSocket(Socket socket) throws IOException {
-        List<String> lines = new ArrayList<String>();
-        String line = "";
+    private List<String>socketRequestContent(Socket socket) throws IOException{
+
+        List<String> content = new ArrayList<String>();
+        String record = "";
         InputStream inputStream = socket.getInputStream();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
+        int largeContent =0;
         while (true) {
-            line = bufferedReader.readLine();
-            boolean stateBuffer = true;
-            stateBuffer = bufferedReader.ready(); //buffer is ready when the line is not null
-
-            if (stateBuffer && line.isEmpty()) { //if line is a linebreak of request for part body
-                int largeBody = 0;
-                for(int i =0;i<lines.size();i++){
-                    String chatLine = lines.get(i);
-                    if (chatLine.contains("Content-Length:")) {
-                        largeBody = Integer.parseInt(chatLine.substring(16));
-                    } //get size of content in body
+            record = bufferedReader.readLine();
+            if (record.length() != 0) {
+                log.debug(record.toString());
+                if (record.contains("Content-Length:")){
+                    if(Integer.parseInt(record.substring(16) ) !=0) {
+                        largeContent =Integer.parseInt(record.substring(16) );
+                    }
+                    else{
+                        break;
+                    }
                 }
-                char[] bodyContent = new char[largeBody];
-                StringBuilder stringBuilder = new StringBuilder(largeBody);
-                for (int i = 0; i < largeBody; i++) {
+                content.add(record);
+            }
+            else{
+                char[] bodyContent = new char[largeContent];
+                StringBuilder stringBuilder = new StringBuilder(largeContent);
+                for (int i = 0; i < largeContent; i++) {
                     bodyContent[i] = (char)bufferedReader.read();
                 }
-                lines.add(new String(bodyContent)); //formated body content
+                content.add(new String(bodyContent)); //formated body content
                 break;
-
-            } else if (!stateBuffer && (line == null || line.isEmpty()) ) {
-                log.debug(line); //EOF
-                //this conditional is for line void or last line from buffer
-                break;
-
-            } else { //simple line not null of request , only add to lines
-                log.debug(line);
-                lines.add(line);
+            }
+            if (content.isEmpty()) {
+                content.add("ERROR");
             }
         }
-        if (lines.isEmpty()) { //if the list whit content is void , it is only error
-            lines.add("ERROR");
-        }
-        return lines;
+        return content;
     }
-
 }
-
