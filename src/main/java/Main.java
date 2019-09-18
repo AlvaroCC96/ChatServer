@@ -12,6 +12,6 @@ public class Main {
      */
     public static void main(final String[] args) throws IOException {
         ChatServer Server = new ChatServer(PORT); //initialize the server and put it to run
-        Server.start();
+        Server.start(); //start de server
     }
 }
