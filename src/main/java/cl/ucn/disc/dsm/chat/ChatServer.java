@@ -2,7 +2,6 @@ package cl.ucn.disc.dsm.chat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -65,7 +64,7 @@ public class ChatServer {
                         "<body>" +
                         "<h1> Chat DSM-UCN</h1>"+
                         "<div>";
-        // this loop add the messages to chat for view in navegator
+        // this loop add the messages to body-chat for view in navegator
         for (ChatMessage chat : messages) {
             body.append("<p>").append(chat.toString()).append("</p>");
         }
@@ -126,29 +125,33 @@ public class ChatServer {
 
     private boolean validateAddMessage(List<String> body) {
 
-        if (body.isEmpty()) {
-            return false;
-        }
-        else{
+        if (!body.isEmpty()) {
             String argument = body.get(body.size() - 1);//get post-request elements , user and message
-            argument = argument.replace("username=", "").replace("message=","");
+            argument = argument.replace("username=", "").replace("message=", "");
             String user = argument.substring(0, argument.indexOf('&'));
-            String sentMessage = argument.substring(argument.indexOf('&') + 1, argument.length());
+            String sentMessage = argument.substring(argument.indexOf('&') + 1);
             sentMessage = sentMessage.replace('+', ' ');
-
-            if (user.isEmpty()|| sentMessage.isEmpty()) {
-                return false; //message or user is void
-            }
-            else {
+            if (user.isEmpty()) {
+                log.debug("Error: User is void");
+                if (sentMessage.isEmpty()){
+                    log.debug("Error: Message is void");
+                    return false;//message and user is void
+                }
+                return false; //user is void
+            } else {
+                if (sentMessage.isEmpty()){
+                    log.debug("Error: Message is void"); //only message is void
+                    return false;
+                }
                 messages.add(new ChatMessage(user, sentMessage)); // add message to database
                 log.debug("Message Added Successfully");
                 return true;
             }
         }
+        return false;
     }
 
     private List<String>socketRequestContent(Socket socket) throws IOException{
-
         List<String> content = new ArrayList<String>();
         String record = "";
         InputStream inputStream = socket.getInputStream();
@@ -160,15 +163,13 @@ public class ChatServer {
                 log.debug(record.toString());
                 if (record.contains("Content-Length:")){
                     if(Integer.parseInt(record.substring(16) ) !=0) {
-                        largeContent =Integer.parseInt(record.substring(16) );
-                    }
-                    else{
+                        largeContent =Integer.parseInt(record.substring(16));
+                    } else {
                         break;
                     }
                 }
                 content.add(record);
-            }
-            else{
+            } else {
                 char[] bodyContent = new char[largeContent];
                 StringBuilder stringBuilder = new StringBuilder(largeContent);
                 for (int i = 0; i < largeContent; i++) {
@@ -177,10 +178,10 @@ public class ChatServer {
                 content.add(new String(bodyContent)); //formated body content
                 break;
             }
-            if (content.isEmpty()) {
-                content.add("ERROR");
-            }
         }
-        return content;
+        if (content.isEmpty()) {
+            content.add("Error"); //if content of request is void
+        }
+        return content; //return list whit content of request
     }
 }
