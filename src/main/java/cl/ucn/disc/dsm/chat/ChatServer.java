@@ -52,6 +52,12 @@ public class ChatServer {
             }
         }
     }
+
+    /**
+     * basic html code for frontEnd
+     * @return frontEnd whit messages
+     * @throws IOException
+     */
     private static String chatPage() throws IOException {
         String codePage="";
         StringBuilder body = new StringBuilder();
@@ -80,9 +86,14 @@ public class ChatServer {
         return codePage;
     }
 
+    /**
+     * Process of conecction , de actions depends of type of request
+     * @param socket
+     * @throws IOException
+     */
     private void processConnection(Socket socket)  throws IOException{
         // Reading the inputstream
-        final List<String> contentSocket = socketRequestContent(socket);
+        final List<String> contentSocket = socketRequestContent(socket); //get de content from socket (get or post)
         final String request = contentSocket.get(0);
         log.debug("Request: {}", request);
         final PrintWriter pw = new PrintWriter(socket.getOutputStream());
@@ -123,6 +134,11 @@ public class ChatServer {
         log.debug("Connection Process Finished.");
     }
 
+    /**
+     * function that validates the message, if valid is added to the database to be displayed on the website
+     * @param body , is content of request
+     * @return bool , it depends if the message was valid or not
+     */
     private boolean validateAddMessage(List<String> body) {
 
         if (!body.isEmpty()) {
@@ -148,28 +164,35 @@ public class ChatServer {
                 return true;
             }
         }
-        return false;
+        log.debug("Error: Body is void");
+        return false; //body is void
     }
 
+    /**
+     * get the content of the request and store it in a list
+     * @param socket
+     * @return
+     * @throws IOException
+     */
     private List<String>socketRequestContent(Socket socket) throws IOException{
         List<String> content = new ArrayList<String>();
         String record = "";
         InputStream inputStream = socket.getInputStream();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        int largeContent =0;
+        int largeContent =0; //for body of request
         while (true) {
-            record = bufferedReader.readLine();
-            if (record.length() != 0) {
+            record = bufferedReader.readLine(); //line of request
+            if (record.length() != 0) { //if is not null or void , get content
                 log.debug(record.toString());
-                if (record.contains("Content-Length:")){
+                if (record.contains("Content-Length:")){ //if content contain this text , save de large of content
                     if(Integer.parseInt(record.substring(16) ) !=0) {
                         largeContent =Integer.parseInt(record.substring(16));
                     } else {
                         break;
                     }
                 }
-                content.add(record);
-            } else {
+                content.add(record); //save all de lines of content, eexcept the empty lines
+            } else { //get de body content whit de largeContent , get all lines includ empty lines 
                 char[] bodyContent = new char[largeContent];
                 StringBuilder stringBuilder = new StringBuilder(largeContent);
                 for (int i = 0; i < largeContent; i++) {
