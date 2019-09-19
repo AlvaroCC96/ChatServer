@@ -192,7 +192,7 @@ public class ChatServer {
                     }
                 }
                 content.add(record); //save all de lines of content, eexcept the empty lines
-            } else { //get de body content whit de largeContent , get all lines includ empty lines 
+            } else { //get de body content whit de largeContent , get all lines includ empty lines
                 char[] bodyContent = new char[largeContent];
                 StringBuilder stringBuilder = new StringBuilder(largeContent);
                 for (int i = 0; i < largeContent; i++) {
