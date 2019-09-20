@@ -28,7 +28,7 @@ public class ChatMessage {
     public String toString(){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         StringBuilder chat = new StringBuilder();
-        chat.append(timestamp.format(formatter)).append(" ").append(username).append(" ").append(message);//formated
+        chat.append(timestamp.format(formatter)).append(" ").append(username).append(":  ").append(message);//formated
         return chat.toString(); //create string
     }
 }

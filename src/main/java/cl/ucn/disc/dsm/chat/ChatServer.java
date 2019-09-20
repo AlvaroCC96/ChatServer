@@ -58,33 +58,6 @@ public class ChatServer {
      * @return frontEnd whit messages
      * @throws IOException
      */
-    private static String chatPage() throws IOException {
-        String codePage="";
-        StringBuilder body = new StringBuilder();
-        String header =
-                "<html lang=\"en\">" +
-                        "<head>" +
-                        "<meta charset=\"UTF-8\">" +
-                        "<title>Messenger DSM</title>" +
-                        "</head>" +
-                        "<body>" +
-                        "<h1> Chat DSM-UCN</h1>"+
-                        "<div>";
-        // this loop add the messages to body-chat for view in navegator
-        for (ChatMessage chat : messages) {
-            body.append("<p>").append(chat.toString()).append("</p>");
-        }
-        body.append("    </div>\n").append( // 2 inputs for POST request user + message
-                "        <form action=\"/\" method=\"post\" >\n").append("       " +
-                "     <input type=\"text\" name=\"username\">\n").append("         " +
-                "   <input type=\"text\" name=\"message\">\n").append("         " +
-                "   <input type=\"submit\" value=\"Enviar\">\n").append("     " +
-                "   </form>\n").append("   " +
-                " </div>\n").append("</body>\n").append("</html>");
-
-        codePage = header + body.toString();
-        return codePage;
-    }
 
     /**
      * Process of conecction , de actions depends of type of request
@@ -107,7 +80,8 @@ public class ChatServer {
             //If the type is POST, we must obtain the request body and store it in the database
             //and then show the updated chat
             if (validateAddMessage(contentSocket)) {
-                pw.println(chatPage());
+
+                pw.println(htmlCode());
                 pw.println();
                 pw.flush();
             } else {
@@ -119,7 +93,8 @@ public class ChatServer {
         }
         else if (request.contains("GET")){
             //if the type is GET, we only show the chat with the message/s
-            pw.println(chatPage());
+
+            pw.println(htmlCode());
             pw.println();
             pw.flush();
         } else {
@@ -206,5 +181,27 @@ public class ChatServer {
             content.add("Error"); //if content of request is void
         }
         return content; //return list whit content of request
+    }
+
+    /**
+     * function that obtains as a string an html file from the server
+     * @return a string that contains html of server whit messages
+     * @throws IOException
+     */
+    private static String htmlCode() throws IOException{
+        FileReader fileReader = new FileReader("./src/html/index.html");
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        String line;
+        StringBuilder stringBuilder = new StringBuilder();
+        while(( line = bufferedReader.readLine())!=null) {
+            if (line.contains("chat-content")) {
+                for (ChatMessage chat : messages) {
+                    stringBuilder.append("<p>").append(chat.toString()).append("</p>");
+                }
+            }
+            stringBuilder.append(line);
+        }
+        bufferedReader.close();
+        return  stringBuilder.toString();
     }
 }
