@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2019. This code is purely educational, the rights of use are
+ * reserved, the owner of the code is Alvaro Castillo Calabacero,
+ * contact alvaro.castillo@alumnos.ucn.cl
+ * Do not use in production.
+ */
+
 package cl.ucn.disc.dsm.chat;
 
 import org.slf4j.Logger;
@@ -80,7 +87,6 @@ public class ChatServer {
             //If the type is POST, we must obtain the request body and store it in the database
             //and then show the updated chat
             if (validateAddMessage(contentSocket)) {
-
                 pw.println(htmlCode());
                 pw.println();
                 pw.flush();
@@ -93,7 +99,6 @@ public class ChatServer {
         }
         else if (request.contains("GET")){
             //if the type is GET, we only show the chat with the message/s
-
             pw.println(htmlCode());
             pw.println();
             pw.flush();
@@ -123,9 +128,9 @@ public class ChatServer {
             String sentMessage = argument.substring(argument.indexOf('&') + 1);
             sentMessage = sentMessage.replace('+', ' ');
             if (user.isEmpty()) {
-                log.debug("Error: User is void");
+                log.error("Error: User is void");
                 if (sentMessage.isEmpty()){
-                    log.debug("Error: Message is void");
+                    log.error("Error: Message is void");
                     return false;//message and user is void
                 }
                 return false; //user is void
@@ -139,7 +144,7 @@ public class ChatServer {
                 return true;
             }
         }
-        log.debug("Error: Body is void");
+        log.error("Body is void");
         return false; //body is void
     }
 
@@ -177,9 +182,6 @@ public class ChatServer {
                 break;
             }
         }
-        if (content.isEmpty()) {
-            content.add("Error"); //if content of request is void
-        }
         return content; //return list whit content of request
     }
 
@@ -193,13 +195,13 @@ public class ChatServer {
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line;
         StringBuilder stringBuilder = new StringBuilder();
-        while(( line = bufferedReader.readLine())!=null) {
-            if (line.contains("chat-content")) {
+        while ( ( line = bufferedReader.readLine() ) != null ) {
+            if (line.contains("chat-content")) { //if detect div for messages , add messages to website
                 for (ChatMessage chat : messages) {
                     stringBuilder.append("<p>").append(chat.toString()).append("</p>");
                 }
             }
-            stringBuilder.append(line);
+            stringBuilder.append(line); //add content from html , to stringBuilder
         }
         bufferedReader.close();
         return  stringBuilder.toString();
