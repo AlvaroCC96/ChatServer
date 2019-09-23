@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * @author Alvaro Castillo
+ */
 public class ChatServer {
     /**
      * bd representation
@@ -86,7 +89,7 @@ public class ChatServer {
         if (request.contains("POST")) {
             //If the type is POST, we must obtain the request body and store it in the database
             //and then show the updated chat
-            if (validateAddMessage(contentSocket)) {
+            if (addToDB(contentSocket)) {
                 pw.println(htmlCode());
                 pw.println();
                 pw.flush();
@@ -114,39 +117,6 @@ public class ChatServer {
         log.debug("Connection Process Finished.");
     }
 
-    /**
-     * function that validates the message, if valid is added to the database to be displayed on the website
-     * @param body , is content of request
-     * @return bool , it depends if the message was valid or not
-     */
-    private boolean validateAddMessage(List<String> body) {
-
-        if (!body.isEmpty()) {
-            String argument = body.get(body.size() - 1);//get post-request elements , user and message
-            argument = argument.replace("username=", "").replace("message=", "");
-            String user = argument.substring(0, argument.indexOf('&'));
-            String sentMessage = argument.substring(argument.indexOf('&') + 1);
-            sentMessage = sentMessage.replace('+', ' ');
-            if (user.isEmpty()) {
-                log.error("Error: User is void");
-                if (sentMessage.isEmpty()){
-                    log.error("Error: Message is void");
-                    return false;//message and user is void
-                }
-                return false; //user is void
-            } else {
-                if (sentMessage.isEmpty()){
-                    log.debug("Error: Message is void"); //only message is void
-                    return false;
-                }
-                messages.add(new ChatMessage(user, sentMessage)); // add message to database
-                log.debug("Message Added Successfully");
-                return true;
-            }
-        }
-        log.error("Body is void");
-        return false; //body is void
-    }
 
     /**
      * get the content of the request and store it in a list
@@ -206,4 +176,47 @@ public class ChatServer {
         bufferedReader.close();
         return  stringBuilder.toString();
     }
+    /**
+     * function that validates the message, if valid is added to the database to be displayed on the website
+     * @param body , is content of request
+     * @return bool , it depends if the message was valid or not
+     */
+    public boolean addToDB(List<String> body) {
+
+        if (!body.isEmpty()) {
+            String line ="";
+            for (String s : body) {
+                line = s;
+                if (line.contains("username") && line.contains("message")) {
+                    log.debug(line);
+                    break;//get post-request elements , user and message
+                }
+            }
+            log.debug(line);
+            String user , msgReceived;
+            line = line.replace("username=", "").replace("message=", "");
+            log.debug(line); //formated [username="**"&message="**"]
+            user = line.substring(0, line.indexOf('&'));
+            log.debug(user);
+
+            if (!user.isEmpty()) {
+                msgReceived = line.substring(line.indexOf('&') + 1); //formated [this+is+my+msg]
+                log.debug(msgReceived);
+                msgReceived = msgReceived.replace('+', ' ');
+                if (msgReceived.isEmpty()) {
+                    log.error("Error: Message is void");
+                    return false; //message is void
+                }
+                ChatMessage chat = new ChatMessage(user, msgReceived);
+                messages.add(chat); // add message to database
+                log.debug("Message Added Successfully");
+                return true;
+            }
+                log.error("User is void");
+                return false;
+        }
+        log.error("Body is void");
+        return false; //body is void
+    }
+
 }

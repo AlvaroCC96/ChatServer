@@ -9,6 +9,9 @@ package cl.ucn.disc.dsm.chat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * @author Alvaro Castillo
+ */
 public class ChatMessage {
     /**
      * atributes message class

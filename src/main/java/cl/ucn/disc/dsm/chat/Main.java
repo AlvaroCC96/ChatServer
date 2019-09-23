@@ -5,9 +5,12 @@
  * Do not use in production.
  */
 
-import cl.ucn.disc.dsm.chat.ChatServer;
+package cl.ucn.disc.dsm.chat;
 import java.io.IOException;
 
+/**
+ * @author Alvaro Castillo
+ */
 public class Main {
     /**
      * port to start the server
