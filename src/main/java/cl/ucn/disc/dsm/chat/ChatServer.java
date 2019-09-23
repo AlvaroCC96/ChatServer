@@ -62,13 +62,6 @@ public class ChatServer {
             }
         }
     }
-
-    /**
-     * basic html code for frontEnd
-     * @return frontEnd whit messages
-     * @throws IOException
-     */
-
     /**
      * Process of conecction , de actions depends of type of request
      * @param socket
@@ -99,14 +92,13 @@ public class ChatServer {
                 pw.println();
                 pw.flush();
             }
-        }
-        else if (request.contains("GET")){
+        } else if (request.contains("GET")){
             //if the type is GET, we only show the chat with the message/s
             pw.println(htmlCode());
             pw.println();
             pw.flush();
         } else {
-            log.debug("ERROR REQUEST");
+            log.error("ERROR REQUEST");
             pw.println("HTTP/1.1 400 ERROR");
             pw.println("Server: DSM v0.0.1");
             pw.println();
@@ -116,7 +108,6 @@ public class ChatServer {
         socket.close();
         log.debug("Connection Process Finished.");
     }
-
 
     /**
      * get the content of the request and store it in a list
@@ -149,7 +140,7 @@ public class ChatServer {
                     bodyContent[i] = (char)bufferedReader.read();
                 }
                 content.add(new String(bodyContent)); //formated body content
-                break;
+                return content;
             }
         }
         return content; //return list whit content of request
@@ -182,7 +173,6 @@ public class ChatServer {
      * @return bool , it depends if the message was valid or not
      */
     public boolean addToDB(List<String> body) {
-
         if (!body.isEmpty()) {
             String line ="";
             for (String s : body) {
@@ -195,28 +185,38 @@ public class ChatServer {
             log.debug(line);
             String user , msgReceived;
             line = line.replace("username=", "").replace("message=", "");
-            log.debug(line); //formated [username="**"&message="**"]
-            user = line.substring(0, line.indexOf('&'));
-            log.debug(user);
+            log.debug(line); //formated ["usuario"&"mensaje"]
+            int pos = line.indexOf("&");
+            user = line.substring(0,pos).replace("+"," ");
+            msgReceived = line.substring(pos+ 1).replace("+"," ");
 
-            if (!user.isEmpty()) {
-                msgReceived = line.substring(line.indexOf('&') + 1); //formated [this+is+my+msg]
-                log.debug(msgReceived);
-                msgReceived = msgReceived.replace('+', ' ');
-                if (msgReceived.isEmpty()) {
-                    log.error("Error: Message is void");
-                    return false; //message is void
-                }
+            if (validateUserMessage(user,msgReceived)) {
                 ChatMessage chat = new ChatMessage(user, msgReceived);
                 messages.add(chat); // add message to database
                 log.debug("Message Added Successfully");
                 return true;
             }
-                log.error("User is void");
-                return false;
+            log.error("Invalid message");
+            return false;
         }
         log.error("Body is void");
         return false; //body is void
     }
-
+    /**
+     * validate de content of message , user and message from post content
+     * @param user
+     * @param msg
+     * @return : if msg and user is valid return true
+     */
+    private static boolean validateUserMessage(String user, String msg){
+        if (!user.isEmpty()) {
+            if (msg.isEmpty()) {
+                log.error("Error: Message is void");
+                return false; //message is void
+            }
+            return true;
+        }
+        log.error("User is void");
+        return false;
+    }
 }
